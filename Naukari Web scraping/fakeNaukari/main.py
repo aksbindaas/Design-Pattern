@@ -1,16 +1,16 @@
-from fastapi import FastAPI
-import json
-import re
-import copy
+from fastapi import FastAPI, HTTPException
+from typing import Optional
+
+import controller
+
 app = FastAPI()
 
-import redis
-
-r = redis.Redis(
-    host='localhost',
-    port=6379)
-
 @app.get("/pythonjobs")
-def read_item(location: str, page:int):
-    json_data = [obj for obj in json.loads(r.get(r'page-'+str(page))) if location in obj['Location']]
-    return json_data
+def read_item(location: Optional[str] = None, page: Optional[int] = None):
+    conn = controller.Controller()
+    if location == None and page == None:
+        return conn.getTop(10)
+    elif location == None or page == None:
+        raise HTTPException(status_code=422, detail="Please pass both Param location and Page parameters")
+    else:
+        return conn.getJobsInLocationAtPage(location, page)
